@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Photon.Pun;
 
-public class Attraction : MonoBehaviour
+public class Attraction : MonoBehaviourPun, IPunObservable
 {
     public float attractionRadius = 5f;
     public float attractionForce = 10f;
@@ -19,8 +19,8 @@ public class Attraction : MonoBehaviour
 
     void FixedUpdate()
     {
-        // if(!PhotonNetwork.IsMasterClient)
-        //     return;
+        if(!PhotonNetwork.IsMasterClient)
+            return;
         Attract();
     }
 
@@ -39,5 +39,10 @@ public class Attraction : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        throw new NotImplementedException();
     }
 }

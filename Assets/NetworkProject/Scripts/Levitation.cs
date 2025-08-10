@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Photon.Pun;
 
-public class Levitation : MonoBehaviour
+public class Levitation : MonoBehaviourPun, IPunObservable
 {
     [SerializeField] 
     private GameObject m_Cube;
@@ -24,8 +24,8 @@ public class Levitation : MonoBehaviour
 
     void FixedUpdate()
     {
-        // if(!PhotonNetwork.IsMasterClient)
-        //     return;
+        if(!PhotonNetwork.IsMasterClient)
+            return;
         Levitate();
     }
 
@@ -70,5 +70,10 @@ public class Levitation : MonoBehaviour
                 rbHit.AddExplosionForce(levitationImpulseForce, position, levitationImpulseRadius, 1f, ForceMode.Impulse);
             }
         }
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        throw new NotImplementedException();
     }
 }

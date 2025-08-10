@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Photon.Pun;
 
-public class MovementController : MonoBehaviour
+public class MovementController : MonoBehaviourPun, IPunObservable
 {
     [Header("Movement Settings")]
     public float moveSpeed = 8f;
@@ -28,8 +28,8 @@ public class MovementController : MonoBehaviour
     
     void FixedUpdate()
     {
-        // if(!PhotonNetwork.IsMasterClient)
-        //     return;
+        if(!PhotonNetwork.IsMasterClient)
+            return;
         Movement();
         Jump();
     }
@@ -89,5 +89,10 @@ public class MovementController : MonoBehaviour
     public void SetGrounded(bool isGrounded)
     {
         this.isGrounded = isGrounded;
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        throw new NotImplementedException();
     }
 }

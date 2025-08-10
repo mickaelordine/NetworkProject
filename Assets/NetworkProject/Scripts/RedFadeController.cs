@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 public class RedFadeController : MonoBehaviour
@@ -43,6 +44,5 @@ public class RedFadeController : MonoBehaviour
                 mat.SetFloat("_RedAmount", redValue);
             }
         }
-    }
+    } 
 }
-

@@ -17,17 +17,3 @@ public class NotifyCollision : MonoBehaviour
         }
     }
 }
-
-
-// public class Instantiator : MonoBehaviour, IPunPrefabPool
-// {
-//     public GameObject Instantiate(string prefabId, Vector3 position, Quaternion rotation)
-//     {
-//         throw new NotImplementedException();
-//     }
-//
-//     public void Destroy(GameObject gameObject)
-//     {
-//         throw new NotImplementedException();
-//     }
-// }
