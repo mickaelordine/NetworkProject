@@ -18,8 +18,13 @@ public class MovementController : MonoBehaviourPun, IPunObservable
     private float shockwaveForce = 300f;
     
     private bool isGrounded = true;
-    
     private Rigidbody m_rb;
+    
+    // NETWORK MEMBERS
+    private Vector3 networkPosition;
+    private Quaternion networkRotation;
+    private Vector3 networkLinearVelocity;
+    private Vector3 networkAngularVelocity;
 
     private void Start()
     {
@@ -28,8 +33,12 @@ public class MovementController : MonoBehaviourPun, IPunObservable
     
     void FixedUpdate()
     {
-        if(!PhotonNetwork.IsMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            InterpolateFromMaster();
             return;
+        }
+            
         Movement();
         Jump();
     }
@@ -90,9 +99,30 @@ public class MovementController : MonoBehaviourPun, IPunObservable
     {
         this.isGrounded = isGrounded;
     }
+    
+    
+    // NETWORKFUNCTIONS
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        throw new NotImplementedException();
+        if (stream.IsWriting)
+        {
+            stream.SendNext(transform.position);
+            stream.SendNext(transform.rotation);
+            // stream.SendNext(m_rb.linearVelocity);
+            // stream.SendNext(m_rb.angularVelocity);
+        }else
+        {
+            networkPosition = (Vector3)stream.ReceiveNext();
+            networkRotation = (Quaternion)stream.ReceiveNext();
+            // networkLinearVelocity = (Vector3)stream.ReceiveNext();
+            // networkAngularVelocity = (Vector3)stream.ReceiveNext();
+        }
+    }
+
+    private void InterpolateFromMaster()
+    {
+        transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * PhotonNetwork.SerializationRate);
+        transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime * PhotonNetwork.SerializationRate);
     }
 }

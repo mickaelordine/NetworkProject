@@ -21,6 +21,8 @@ public class Levitation : MonoBehaviourPun, IPunObservable
     private float levitationImpulseRadius = 1.0f;
     [SerializeField]
     private float levitationImpulseForce = 0.1f;
+    
+    
 
     void FixedUpdate()
     {
@@ -74,6 +76,6 @@ public class Levitation : MonoBehaviourPun, IPunObservable
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        throw new NotImplementedException();
+        
     }
 }
