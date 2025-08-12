@@ -17,12 +17,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [Range(10, 60)]
     [Tooltip("Quante volte al secondo vengono inviati i pacchetti di rete")]
     [SerializeField] 
-    private int m_CustomSendRate = 20; //20 pack per second
+    private int m_CustomSendRate = 33; //33 pack per second
 
-    [Range(5, 60)]
+    [Range(5, 100)]
     [Tooltip("Quante volte al secondo vengono serializzati i dati")]
     [SerializeField] 
-    private int m_CustomSerializationRate = 15; // sync ~66 ms
+    private int m_CustomSerializationRate = 100; // sync ~66 ms
 
     private List<String> m_PlayerHistory = new List<String>();
 
@@ -86,7 +86,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             Debug.Log($"Synced network settings with room - Send: {PhotonNetwork.SendRate}, Serialization: {PhotonNetwork.SerializationRate}");
         }
 
-        if(PhotonNetwork.IsMasterClient && m_PlayerHistory.Count > 0)
+        if(PhotonNetwork.IsMasterClient) //&& m_PlayerHistory.Count > 0
             SpawnActorsInScene();
     }
     
@@ -125,7 +125,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     private void RemovePlayerToHistory(String name)
     {
         string log = $"[{System.DateTime.Now}] {name} has left the room.";
-        m_PlayerHistory.Remove(name);
         Debug.Log(log);
     }
 }

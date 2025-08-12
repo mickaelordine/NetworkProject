@@ -36,9 +36,10 @@ public class MovementController : MonoBehaviourPun, IPunObservable
         if (!PhotonNetwork.IsMasterClient)
         {
             InterpolateFromMaster();
+            Debug.Log("Not Master Client");
             return;
         }
-            
+        Debug.Log("Master Client");
         Movement();
         Jump();
     }
