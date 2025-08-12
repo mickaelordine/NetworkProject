@@ -29,17 +29,26 @@ public class MovementController : MonoBehaviourPun, IPunObservable
     private void Start()
     {
         m_rb = m_Cube.GetComponent<Rigidbody>();
+        networkPosition = transform.position;
+        networkRotation = transform.rotation;
     }
-    
-    void FixedUpdate()
+
+
+    private void Update()
     {
         if (!PhotonNetwork.IsMasterClient)
         {
             InterpolateFromMaster();
-            Debug.Log("Not Master Client");
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            m_rb.isKinematic = true;
             return;
         }
-        Debug.Log("Master Client");
         Movement();
         Jump();
     }
@@ -123,7 +132,7 @@ public class MovementController : MonoBehaviourPun, IPunObservable
 
     private void InterpolateFromMaster()
     {
-        transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * PhotonNetwork.SerializationRate);
-        transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime * PhotonNetwork.SerializationRate);
+        transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime / 20f);
+        transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime / 20f);
     }
 }
