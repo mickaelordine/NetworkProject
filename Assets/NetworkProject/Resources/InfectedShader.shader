@@ -18,6 +18,7 @@ Shader "Custom/InfectedShader"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma target 3.0
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes
@@ -43,7 +44,7 @@ Shader "Custom/InfectedShader"
             half4 frag (Varyings IN) : SV_Target
             {
                 half4 col = _BaseColor;
-                col.r = saturate(_RedAmount); // evita valori fuori [0,1]
+                col.r = saturate(_RedAmount);
                 return col;
             }
             ENDHLSL

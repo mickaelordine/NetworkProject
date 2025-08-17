@@ -118,15 +118,17 @@ public class CuboidMovement : MonoBehaviourPun, IPunObservable
     
     private void Update()
     {
+        
+    }
+    
+    private void FixedUpdate()
+    {
         bool isNotMoving = NearZeroFloat(m_rb.linearVelocity.sqrMagnitude);
         if (!PhotonNetwork.IsMasterClient && !isNotMoving)
         {
             InterpolateFromMaster();
         }
-    }
-    
-    private void FixedUpdate()
-    {
+        
         if (!PhotonNetwork.IsMasterClient)
         {
             m_rb.isKinematic = true;
@@ -144,19 +146,10 @@ public class CuboidMovement : MonoBehaviourPun, IPunObservable
             
             if (!isNotMoving)
             {
-                //scrivo solo se ho una velocità maggiore di una tolleranza, se no non mando info su di me
-                
                 byte[] positionEncoded = Vector3Compression.Encode(transform.position);
                 stream.SendNext(positionEncoded);
                 byte[] rotationEncoded = QuaternionCompression.Encode(transform.rotation);
                 stream.SendNext(rotationEncoded);
-                
-                // stream.SendNext(transform.position);
-                // stream.SendNext(transform.rotation);
-
-
-                //stream.SendNext(new ShortVector3(m_rb.linearVelocity));
-                //stream.SendNext(m_rb.angularVelocity);
             }
         }else
         {
@@ -169,14 +162,6 @@ public class CuboidMovement : MonoBehaviourPun, IPunObservable
                 
                 byte[] receiveRotation = (byte[])stream.ReceiveNext();
                 m_NetworkRotation = QuaternionCompression.Decode(receiveRotation);
-                
-                // m_NetworkPosition = (Vector3)stream.ReceiveNext();
-                // m_NetworkRotation = (Quaternion)stream.ReceiveNext();
-                
-                
-                
-                //m_NetworkLinearVelocity = (Vector3)stream.ReceiveNext();
-                //m_NetworkAngularVelocity = (Quaternion)stream.ReceiveNext();
             }
             // else
             // {
@@ -187,12 +172,18 @@ public class CuboidMovement : MonoBehaviourPun, IPunObservable
     
     private void InterpolateFromMaster()
     {
-        // Vector3 position = new Vector3(m_NetworkPosition.x, m_NetworkPosition.y, m_NetworkPosition.z);
-        // Quaternion rot = new Quaternion(m_NetworkRotation.x, m_NetworkRotation.y, m_NetworkRotation.z, m_NetworkRotation.w);
-        
-        //m_rb.linearVelocity = Vector3.Lerp(m_rb.linearVelocity, m_NetworkLinearVelocity, Time.deltaTime * PhotonNetwork.SerializationRate);
-        transform.position = Vector3.Lerp(transform.position, m_NetworkPosition, Time.deltaTime / 20f);
-        transform.rotation = Quaternion.Slerp(transform.rotation, m_NetworkRotation, Time.deltaTime / 20f);
+        //snap se la distanza è troppo grande
+        if ((transform.position - m_NetworkPosition).sqrMagnitude > 1f) {
+            transform.position = m_NetworkPosition;
+            transform.rotation = m_NetworkRotation;
+        } 
+        else 
+        {
+            //interpola altrimenti
+            float lerpFactor = Time.deltaTime * PhotonNetwork.SerializationRate;
+            transform.position = Vector3.Lerp(transform.position, m_NetworkPosition, lerpFactor);
+            transform.rotation = Quaternion.Slerp(transform.rotation, m_NetworkRotation, lerpFactor);
+        }
     }
 
 

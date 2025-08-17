@@ -49,6 +49,7 @@ public class MovementController : MonoBehaviourPun, IPunObservable
             m_rb.isKinematic = true;
             return;
         }
+        m_rb.isKinematic = false;
         Movement();
         Jump();
     }

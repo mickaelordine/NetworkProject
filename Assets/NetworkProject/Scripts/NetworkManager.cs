@@ -22,9 +22,19 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [Range(5, 100)]
     [Tooltip("Quante volte al secondo vengono serializzati i dati")]
     [SerializeField] 
-    private int m_CustomSerializationRate = 100; // sync ~66 ms
-
+    private int m_CustomSerializationRate = 15; // sync ~66 ms
+    
+    [Range(10, 300)]
+    [Tooltip("Nums of cubes")]
+    [SerializeField] 
+    private int m_CuboidAmount = 100;
+    
+    [SerializeField]
+    private FollowCamera m_Camera;
+    
     private List<String> m_PlayerHistory = new List<String>();
+    
+    
 
     
     private void Start()
@@ -35,11 +45,27 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void SpawnActorsInScene()
     {
-        // add the logic to spawn all the prefabs needed to start the game with PhotonNetwork.Instanciate();
         
         //CleanUp() in case needed
         
-        //SetUptheScene()
+        Vector3 StartingLocationCharacter = new Vector3(0, 3.0f, 0);
+        float spacing = 1.0f;
+        int gridSize = Mathf.CeilToInt(Mathf.Sqrt(m_CuboidAmount));
+
+        for (int i = 0; i < m_CuboidAmount; ++i)
+        {
+            int x = i % gridSize;      // colonna
+            int z = i / gridSize;      // riga
+
+            Vector3 pos = new Vector3(x * spacing, 0, z * spacing);
+            PhotonNetwork.Instantiate("Cuboid", pos, Quaternion.identity);
+        }
+        
+        //spawn the character
+        PhotonNetwork.Instantiate("Character", StartingLocationCharacter, Quaternion.identity);
+        
+        // set up the camera
+        m_Camera.FindPlayerToFollow();
     }
 
     private void SetUpNetworkSettings()
