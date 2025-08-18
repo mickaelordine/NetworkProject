@@ -5,9 +5,12 @@ public class RedFadeController : MonoBehaviourPun, IPunObservable
 {
     public Renderer targetRenderer;
     public float fadeSpeed = 1.0f;
+    
 
     private float redValue = 0f;
     private MaterialPropertyBlock mpb;
+    private bool m_IsTouchingSomething = false;
+    private bool m_IsTouchingSomethingNetwork = false;
 
     public float GetRedValue()
     {
@@ -21,21 +24,30 @@ public class RedFadeController : MonoBehaviourPun, IPunObservable
 
     void Update()
     {
-        if (redValue > 0f)
+        if (PhotonNetwork.IsMasterClient || !m_IsTouchingSomethingNetwork)
         {
-            redValue -= fadeSpeed * Time.deltaTime;
-            if (redValue < 0f) redValue = 0f;
-
-            UpdateColor();
+            if (redValue > 0f)
+            {
+                redValue -= fadeSpeed * Time.deltaTime;
+                if (redValue < 0f) redValue = 0f;
+            }
         }
+        UpdateColor();
     }
 
     private void OnCollisionStay(Collision other)
     {
+        if (!PhotonNetwork.IsMasterClient) return;
+
         if (other.gameObject.CompareTag("Character"))
         {
             redValue = 1f;
-            UpdateColor();
+            m_IsTouchingSomething = true;
+            return;
+        }
+        else
+        {
+            m_IsTouchingSomething = false;
         }
 
         if (other.gameObject.CompareTag("Cuboid"))
@@ -44,17 +56,19 @@ public class RedFadeController : MonoBehaviourPun, IPunObservable
             if (otherCtrl != null && otherCtrl.GetRedValue() > redValue)
             {
                 redValue = otherCtrl.GetRedValue() / 2.0f;
-                UpdateColor();
             }
+            m_IsTouchingSomething = true;
+        }
+        else
+        {
+            m_IsTouchingSomething = false;
         }
     }
 
     private void UpdateColor()
     {
-        // Interpola tra bianco e rosso
         Color c = Color.Lerp(Color.white, Color.red, redValue);
 
-        // Aggiorna il MaterialPropertyBlock
         targetRenderer.GetPropertyBlock(mpb);
         mpb.SetColor("_BaseColor", c);
         targetRenderer.SetPropertyBlock(mpb);
@@ -62,13 +76,20 @@ public class RedFadeController : MonoBehaviourPun, IPunObservable
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
+        
         if (stream.IsWriting)
         {
-            stream.SendNext(redValue);
+            stream.SendNext(m_IsTouchingSomething);
+            if (m_IsTouchingSomething)
+            {
+                stream.SendNext(redValue);
+            }
         }
         else
         {
-            redValue = (float)stream.ReceiveNext();
+            m_IsTouchingSomethingNetwork = (bool)stream.ReceiveNext();
+            if(m_IsTouchingSomethingNetwork)
+                redValue = (float)stream.ReceiveNext();
         }
     }
 }
