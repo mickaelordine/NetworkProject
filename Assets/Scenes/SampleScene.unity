@@ -329,8 +329,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abbd3dedfa53e144d8534ac0b6f07a1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_CustomSendRate: 20
-  m_CustomSerializationRate: 20
+  m_CustomSendRate: 15
+  m_CustomSerializationRate: 15
   m_CuboidAmount: 100
   m_Camera: {fileID: 633913752}
 --- !u!4 &2125056321

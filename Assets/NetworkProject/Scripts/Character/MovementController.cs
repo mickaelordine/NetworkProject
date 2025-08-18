@@ -21,29 +21,26 @@ public class MovementController : MonoBehaviourPun, IPunObservable
     private Rigidbody m_rb;
     
     // NETWORK MEMBERS
-    private Vector3 networkPosition;
-    private Quaternion networkRotation;
-    private Vector3 networkLinearVelocity;
-    private Vector3 networkAngularVelocity;
+    private Vector3 m_NetworkPosition;
+    private Quaternion m_NetworkRotation;
+    private Vector3 m_NetworkLinearVelocity;
+    private Vector3 m_NetworkAngularVelocity;
 
     private void Start()
     {
         m_rb = m_Cube.GetComponent<Rigidbody>();
-        networkPosition = transform.position;
-        networkRotation = transform.rotation;
-    }
-
-
-    private void Update()
-    {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            InterpolateFromMaster();
-        }
+        m_NetworkPosition = transform.position;
+        m_NetworkRotation = transform.rotation;
     }
 
     void FixedUpdate()
     {
+        bool isNotMoving = NearZeroFloat(m_rb.linearVelocity.sqrMagnitude);
+        if (!PhotonNetwork.IsMasterClient && !isNotMoving)
+        {
+            InterpolateFromMaster();
+        }
+        
         if (!PhotonNetwork.IsMasterClient)
         {
             m_rb.isKinematic = true;
@@ -118,22 +115,64 @@ public class MovementController : MonoBehaviourPun, IPunObservable
     {
         if (stream.IsWriting)
         {
-            stream.SendNext(transform.position);
-            stream.SendNext(transform.rotation);
-            // stream.SendNext(m_rb.linearVelocity);
-            // stream.SendNext(m_rb.angularVelocity);
-        }else
+            bool isNotMoving = NearZeroFloat(m_rb.linearVelocity.sqrMagnitude);
+            stream.SendNext(isNotMoving);
+            
+            if (!isNotMoving)
+            {
+                byte[] positionEncoded = Vector3Compression.Encode(transform.position);
+                stream.SendNext(positionEncoded);
+                byte[] rotationEncoded = QuaternionCompression.Encode(transform.rotation);
+                stream.SendNext(rotationEncoded);
+            }
+        }
+        else
         {
-            networkPosition = (Vector3)stream.ReceiveNext();
-            networkRotation = (Quaternion)stream.ReceiveNext();
-            // networkLinearVelocity = (Vector3)stream.ReceiveNext();
-            // networkAngularVelocity = (Vector3)stream.ReceiveNext();
+            bool isNotMoving = (bool)stream.ReceiveNext();
+            if (!isNotMoving)
+            {
+                byte[] receivePosition = (byte[])stream.ReceiveNext();
+                m_NetworkPosition = Vector3Compression.Decode(receivePosition);
+                
+                byte[] receiveRotation = (byte[])stream.ReceiveNext();
+                m_NetworkRotation = QuaternionCompression.Decode(receiveRotation);
+            }
         }
     }
 
     private void InterpolateFromMaster()
     {
-        transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime / 20f);
-        transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime / 20f);
+        //snap se la distanza è troppo grande
+        if ((transform.position - m_NetworkPosition).sqrMagnitude > 1f) {
+            transform.position = m_NetworkPosition;
+            transform.rotation = m_NetworkRotation;
+        } 
+        else 
+        {
+            //interpola altrimenti
+            float lerpFactor = Time.deltaTime * PhotonNetwork.SerializationRate;
+            transform.position = Vector3.Lerp(transform.position, m_NetworkPosition, lerpFactor);
+            transform.rotation = Quaternion.Slerp(transform.rotation, m_NetworkRotation, lerpFactor);
+        }
+    }
+    
+    
+    private bool NearZeroFloat(float value, float tollerance = 0.05f)
+    {
+        if (value > tollerance || value < -tollerance)
+        {
+            return false;
+        }
+        return true;
+    }
+    
+    private bool NearZero(Vector3 velocity, float tollerance = 0.05f)
+    {
+        if (NearZeroFloat(velocity.x, tollerance) && NearZeroFloat(velocity.y, tollerance) &&
+            NearZeroFloat(velocity.z, tollerance))
+        {
+            return true;
+        }
+        return false;
     }
 }
